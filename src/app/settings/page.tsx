@@ -36,7 +36,7 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Work End Time</label>
-                <Input type="time" defaultValue="17:00" />
+                <Input type="time" defaultValue="17:45" />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -46,7 +46,7 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Min Hours for Full Day</label>
-                <Input type="number" defaultValue="8" />
+                <Input type="number" defaultValue="9" />
               </div>
             </div>
             <Button className="mt-4">
