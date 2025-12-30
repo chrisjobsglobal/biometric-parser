@@ -53,7 +53,7 @@ export default function Home() {
           {logs.length === 0 && (
             <Button onClick={loadSampleData} variant="outline" className="gap-2">
               <Download className="h-4 w-4" />
-              Load Sample Data
+              Load Data
             </Button>
           )}
         </div>
