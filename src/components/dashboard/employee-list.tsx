@@ -18,8 +18,11 @@ import { Search, User } from "lucide-react";
 import { getDailyAttendance } from "@/lib/biometric-parser";
 
 export function EmployeeList() {
-  const { logs, employees, setSelectedEmployee, selectedEmployeeNo } =
+  const { logs, employees, setSelectedEmployee, selectedEmployeeNo, settings } =
     useBiometricStore();
+  const [search, setSearch] = useState("");
+
+  const minHoursFullDay = settings.minHoursFullDay;
   const [search, setSearch] = useState("");
 
   const employeeStats = useMemo(() => {
@@ -114,9 +117,9 @@ export function EmployeeList() {
                   <TableCell>
                     <span
                       className={
-                        emp.avgHours >= 8
+                        emp.avgHours >= minHoursFullDay
                           ? "text-green-600 dark:text-green-400"
-                          : emp.avgHours >= 6
+                          : emp.avgHours >= minHoursFullDay * 0.75
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-red-600 dark:text-red-400"
                       }

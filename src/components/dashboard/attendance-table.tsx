@@ -18,9 +18,17 @@ import { formatDate, formatDuration, formatTime } from "@/lib/utils";
 import { Search, Clock, Coffee } from "lucide-react";
 
 export function AttendanceTable() {
-  const { logs, employees, getFilteredAttendance, setSelectedEmployee, selectedEmployeeNo } =
+  const { logs, employees, getFilteredAttendance, setSelectedEmployee, selectedEmployeeNo, settings } =
     useBiometricStore();
   const [search, setSearch] = useState("");
+
+  const attendance = getFilteredAttendance();
+
+  // Parse settings for calculations
+  const [startHour, startMinute] = settings.workStartTime.split(":").map(Number);
+  const [endHour, endMinute] = settings.workEndTime.split(":").map(Number);
+  const lateThresholdMinutes = settings.lateThresholdMinutes;
+  const minHoursFullDay = settings.minHoursFullDay;
 
   const attendance = getFilteredAttendance();
 
@@ -93,10 +101,27 @@ export function AttendanceTable() {
             </TableHeader>
             <TableBody>
               {filteredAttendance.slice(0, 50).map((record, idx) => {
-                const isLateArrival =
-                  record.clockIn && record.clockIn.getHours() >= 9;
-                const isEarlyDeparture =
-                  record.clockOut && record.clockOut.getHours() < 17;
+                // Calculate late arrival based on settings
+                const isLateArrival = record.clockIn && (() => {
+                  const clockInHour = record.clockIn!.getHours();
+                  const clockInMinute = record.clockIn!.getMinutes();
+                  const clockInTotalMinutes = clockInHour * 60 + clockInMinute;
+                  const thresholdTotalMinutes = startHour * 60 + startMinute + lateThresholdMinutes;
+                  return clockInTotalMinutes > thresholdTotalMinutes;
+                })();
+
+                // Calculate early departure based on settings
+                const isEarlyDeparture = record.clockOut && (() => {
+                  const clockOutHour = record.clockOut!.getHours();
+                  const clockOutMinute = record.clockOut!.getMinutes();
+                  const clockOutTotalMinutes = clockOutHour * 60 + clockOutMinute;
+                  const endTotalMinutes = endHour * 60 + endMinute;
+                  return clockOutTotalMinutes < endTotalMinutes;
+                })();
+
+                // Calculate full day based on minHoursFullDay setting
+                const isFullDay = record.totalHours >= minHoursFullDay;
+                const isPartialDay = record.totalHours > 0 && record.totalHours < minHoursFullDay;
 
                 return (
                   <TableRow key={`${record.employeeNo}-${record.date.getTime()}-${idx}`}>
@@ -152,10 +177,10 @@ export function AttendanceTable() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1 flex-wrap">
-                        {record.totalHours >= 8 && (
+                        {isFullDay && (
                           <Badge variant="success">Full Day</Badge>
                         )}
-                        {record.totalHours > 0 && record.totalHours < 8 && (
+                        {isPartialDay && (
                           <Badge variant="warning">Partial</Badge>
                         )}
                         {isLateArrival && (

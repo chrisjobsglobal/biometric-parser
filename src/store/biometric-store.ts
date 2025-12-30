@@ -8,6 +8,20 @@ import {
   getDashboardStats,
 } from "@/lib/biometric-parser";
 
+export interface WorkSettings {
+  workStartTime: string; // HH:mm format
+  workEndTime: string; // HH:mm format
+  lateThresholdMinutes: number;
+  minHoursFullDay: number;
+}
+
+const defaultSettings: WorkSettings = {
+  workStartTime: "08:00",
+  workEndTime: "17:45",
+  lateThresholdMinutes: 15,
+  minHoursFullDay: 9,
+};
+
 interface BiometricStore {
   logs: BiometricLog[];
   employees: Employee[];
@@ -15,9 +29,11 @@ interface BiometricStore {
   error: string | null;
   selectedEmployeeNo: number | null;
   selectedDate: Date | null;
+  settings: WorkSettings;
 
   // Actions
   loadFromCSV: (csvContent: string) => void;
+  updateSettings: (settings: Partial<WorkSettings>) => void;
   setSelectedEmployee: (employeeNo: number | null) => void;
   setSelectedDate: (date: Date | null) => void;
   clearData: () => void;
@@ -36,6 +52,13 @@ export const useBiometricStore = create<BiometricStore>()(
       error: null,
       selectedEmployeeNo: null,
       selectedDate: null,
+      settings: defaultSettings,
+
+      updateSettings: (newSettings: Partial<WorkSettings>) => {
+        set((state) => ({
+          settings: { ...state.settings, ...newSettings },
+        }));
+      },
 
       loadFromCSV: (csvContent: string) => {
         set({ isLoading: true, error: null });
@@ -87,6 +110,7 @@ export const useBiometricStore = create<BiometricStore>()(
           ...l,
           dateTime: l.dateTime.toISOString(),
         })),
+        settings: state.settings,
       }),
       onRehydrateStorage: () => (state) => {
         if (state?.logs) {

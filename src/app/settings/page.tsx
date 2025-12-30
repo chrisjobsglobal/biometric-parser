@@ -7,9 +7,33 @@ import { Input } from "@/components/ui/input";
 import { useBiometricStore } from "@/store/biometric-store";
 import { toast } from "sonner";
 import { Trash2, Database, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function SettingsPage() {
-  const { logs, clearData } = useBiometricStore();
+  const { logs, clearData, settings, updateSettings } = useBiometricStore();
+  
+  const [workStartTime, setWorkStartTime] = useState(settings.workStartTime);
+  const [workEndTime, setWorkEndTime] = useState(settings.workEndTime);
+  const [lateThreshold, setLateThreshold] = useState(settings.lateThresholdMinutes);
+  const [minHoursFullDay, setMinHoursFullDay] = useState(settings.minHoursFullDay);
+
+  // Sync local state when settings change (e.g., on hydration)
+  useEffect(() => {
+    setWorkStartTime(settings.workStartTime);
+    setWorkEndTime(settings.workEndTime);
+    setLateThreshold(settings.lateThresholdMinutes);
+    setMinHoursFullDay(settings.minHoursFullDay);
+  }, [settings]);
+
+  const handleSaveSettings = () => {
+    updateSettings({
+      workStartTime,
+      workEndTime,
+      lateThresholdMinutes: lateThreshold,
+      minHoursFullDay,
+    });
+    toast.success("Settings saved successfully");
+  };
 
   const handleClearData = () => {
     if (confirm("Are you sure you want to clear all data? This action cannot be undone.")) {
@@ -32,24 +56,40 @@ export default function SettingsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Work Start Time</label>
-                <Input type="time" defaultValue="08:00" />
+                <Input 
+                  type="time" 
+                  value={workStartTime}
+                  onChange={(e) => setWorkStartTime(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Work End Time</label>
-                <Input type="time" defaultValue="17:45" />
+                <Input 
+                  type="time" 
+                  value={workEndTime}
+                  onChange={(e) => setWorkEndTime(e.target.value)}
+                />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Late Threshold (minutes)</label>
-                <Input type="number" defaultValue="15" />
+                <Input 
+                  type="number" 
+                  value={lateThreshold}
+                  onChange={(e) => setLateThreshold(Number(e.target.value))}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Min Hours for Full Day</label>
-                <Input type="number" defaultValue="9" />
+                <Input 
+                  type="number" 
+                  value={minHoursFullDay}
+                  onChange={(e) => setMinHoursFullDay(Number(e.target.value))}
+                />
               </div>
             </div>
-            <Button className="mt-4">
+            <Button className="mt-4" onClick={handleSaveSettings}>
               <Clock className="mr-2 h-4 w-4" />
               Save Settings
             </Button>

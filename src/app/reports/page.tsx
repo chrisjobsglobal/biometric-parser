@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 
 export default function ReportsPage() {
-  const { logs } = useBiometricStore();
+  const { logs, settings } = useBiometricStore();
 
   const reportData = useMemo(() => {
     if (logs.length === 0) return null;
@@ -27,6 +27,10 @@ export default function ReportsPage() {
     const employees = getEmployees(logs);
     const dailyAttendances = getDailyAttendance(logs);
     const hoursPerDay = getHoursWorkedPerDay(logs);
+
+    // Parse work start time from settings
+    const [startHour, startMinute] = settings.workStartTime.split(":").map(Number);
+    const lateThresholdMinutes = settings.lateThresholdMinutes;
 
     // Employee summary report
     const employeeSummary = employees.map((emp) => {
@@ -36,9 +40,15 @@ export default function ReportsPage() {
       const totalHours = empAttendance.reduce((sum, a) => sum + a.totalHours, 0);
       const avgHours = empAttendance.length > 0 ? totalHours / empAttendance.length : 0;
       const daysWorked = empAttendance.filter((a) => a.totalHours > 0).length;
-      const lateCount = empAttendance.filter(
-        (a) => a.clockIn && a.clockIn.getHours() >= 9
-      ).length;
+      const lateCount = empAttendance.filter((a) => {
+        if (!a.clockIn) return false;
+        const clockInHour = a.clockIn.getHours();
+        const clockInMinute = a.clockIn.getMinutes();
+        const clockInTotalMinutes = clockInHour * 60 + clockInMinute;
+        const thresholdTotalMinutes = startHour * 60 + startMinute + lateThresholdMinutes;
+        // Late if arrival is after work start time + threshold
+        return clockInTotalMinutes > thresholdTotalMinutes;
+      }).length;
       const totalBreaks = empAttendance.reduce(
         (sum, a) => sum + a.breaks.reduce((s, b) => s + b.duration, 0),
         0
@@ -69,7 +79,7 @@ export default function ReportsPage() {
       overallAvgEmployeesPerDay,
       totalEmployees: employees.length,
     };
-  }, [logs]);
+  }, [logs, settings]);
 
   const downloadCSV = () => {
     if (!reportData) return;
@@ -214,9 +224,9 @@ export default function ReportsPage() {
                       <TableCell>{formatDuration(emp.totalHours * 60)}</TableCell>
                       <TableCell
                         className={
-                          emp.avgHours >= 8
+                          emp.avgHours >= settings.minHoursFullDay
                             ? "text-green-600"
-                            : emp.avgHours >= 6
+                            : emp.avgHours >= settings.minHoursFullDay * 0.75
                               ? "text-amber-600"
                               : "text-red-600"
                         }
