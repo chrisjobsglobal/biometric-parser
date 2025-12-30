@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -93,6 +94,13 @@ export function DashboardLayout({ children }: SidebarProps) {
               {navigation.find((n) => n.href === pathname)?.name || "Dashboard"}
             </h1>
           </div>
+          <Image 
+            src="/images/logo.png" 
+            alt="Company Logo" 
+            width={80}
+            height={40}
+            className="object-contain"
+          />
         </header>
 
         {/* Page content */}
