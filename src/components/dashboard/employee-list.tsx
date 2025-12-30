@@ -23,7 +23,6 @@ export function EmployeeList() {
   const [search, setSearch] = useState("");
 
   const minHoursFullDay = settings.minHoursFullDay;
-  const [search, setSearch] = useState("");
 
   const employeeStats = useMemo(() => {
     return employees.map((emp) => {
