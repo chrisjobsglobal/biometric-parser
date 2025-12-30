@@ -22,8 +22,6 @@ export function AttendanceTable() {
     useBiometricStore();
   const [search, setSearch] = useState("");
 
-  const attendance = getFilteredAttendance();
-
   // Parse settings for calculations
   const [startHour, startMinute] = settings.workStartTime.split(":").map(Number);
   const [endHour, endMinute] = settings.workEndTime.split(":").map(Number);
